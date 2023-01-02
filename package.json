@@ -14,7 +14,7 @@
       "prettier --write ."
     ]
   },
-  "author": "",
+  "author": "Bheem Shashivardhan <bsvvrdhan630@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.1",
