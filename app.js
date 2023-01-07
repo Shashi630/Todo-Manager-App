@@ -2,28 +2,41 @@ const express = require("express");
 const app = express();
 const { Todo } = require("./models");
 const bodyParser = require("body-parser");
+const { response } = require("express");
 app.use(bodyParser.json());
+const path = require("path");
 
-app.get("/", function (request, response) {
-  response.send("Hello World");
+app.set("view engine", "ejs");
+
+app.get("/", async (request, response) => {
+  const allTodos = await Todo.getTodos();
+  if (request.accepts("html")) {
+    response.render("index", {
+      allTodos,
+    });
+  } else {
+    response.json({
+      allTodos,
+    });
+  }
 });
+
+app.use(express.static(path.join(__dirname, "public")));
+
+/* Sequelize-cli(Without UI) endpoints/route using express.js: */
+// app.get("/", function (request, response) {
+//   response.send("Hello World");
+// });
 
 app.get("/todos", async function (_request, response) {
   console.log("Processing list of all Todos ...");
-  try{
-    const todolist=await Todo.findAll();
-    return response.send(todolist)
+  try {
+    const todosList = await Todo.findAll();
+    return response.send(todosList);
+  } catch (error) {
+    console.log(error);
+    return response.status(422).json(error);
   }
-  catch (error){
-    console.log(error)
-    return response.status(422).json(error)
-  }
-
-  // FILL IN YOUR CODE HERE
-
-  // First, we have to query our PostgerSQL database using Sequelize to get list of all Todos.
-  // Then, we have to respond with all Todos, like:
-  r//esponse.send(todos)
 });
 
 app.get("/todos/:id", async function (request, response) {
@@ -59,29 +72,19 @@ app.put("/todos/:id/markAsCompleted", async function (request, response) {
 
 app.delete("/todos/:id", async function (request, response) {
   console.log("We have to delete a Todo with ID: ", request.params.id);
-  const todo=await Todo.findByPk(request.params.id)
-  try{
-    if (todo==null) return response.send(false)
-    else{
-      const delcount=await Todo.destroy({
-        where:{
-          id:request.params.id
-        },
-      })
+  const todo = await Todo.findByPk(request.params.id);
+  try {
+    if (todo === null) return response.send(false);
+    else {
+      const deletedTodosCount = await todo.destroy({
+        where: { id: request.params.id },
+      });
       return response.json(true);
     }
-  }
-  catch(error){
+  } catch (error) {
     console.log(error);
-    return response.status(422),json(error)
+    return response.status(422).json(error);
   }
-
-
-  // FILL IN YOUR CODE HERE
-
-  // First, we have to query our database to delete a Todo by ID.
-  // Then, we have to respond back with true/false based on whether the Todo was deleted or not.
-  // response.send(true)
 });
 
 module.exports = app;
